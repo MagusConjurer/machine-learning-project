@@ -19,7 +19,6 @@ def load_dataset(filename):
                 data = []
                 labels = []
                 attributes = []
-                vectorizer = DictVectorizer()
                 for line in f:
                     entry = line.strip().split(',')
                     if len(attributes) < 1:
@@ -38,7 +37,7 @@ def load_dataset(filename):
                             else:
                                 row[attributes[i]] = value
 
-                        data.append(vectorizer.fit_transform(row).toarray())
+                        data.append(row)
             return data, labels
         else:
             print('Provided file', filename, 'is not a csv.')
@@ -61,7 +60,22 @@ class KaggleProject:
         self.results = []
         self.training_X, self.training_y, self.testing_X = load_data()
 
+    def __pre_process_data(self):
+        """
+        Handle all missing (?) attribute values and convert the dictionary rows to arrays
+        that the sklearn trees can handle.
+        :return:
+        """
+        vectorizer = DictVectorizer()
+        processed_X = []
+        for i in range(len(self.training_X)):
+            row = self.training_X[i]
+            processed_X.append(vectorizer.fit_transform(row).toarray())
+
+        return 0
+
     def run_midterm_progress(self):
+        self.__pre_process_data()
         adaBoost = AdaBoostClassifier()
         adaBoost.fit(self.training_X, self.training_y)
         print("ID,Prediction")
