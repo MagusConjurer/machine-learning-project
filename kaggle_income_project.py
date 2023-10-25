@@ -10,6 +10,7 @@ Modified : 24 October 2023
 
 import sys
 import datetime
+import numpy as np
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.feature_extraction import DictVectorizer
 
@@ -78,6 +79,21 @@ def load_dataset(filename):
     return None
 
 
+def write_results_to_file(results):
+    date_data = datetime.datetime.now()
+    day = date_data.strftime("%d%b")
+    time = date_data.strftime("%H%M")
+    filename = "predictions/prediction-{}-{}.csv".format(day, time)
+    try:
+        with open(filename, "w") as f:
+            print("Writing predictions to file:", filename)
+            f.write("ID,Prediction")
+            for i in range(len(results)):
+                f.write("\n{},{}".format(i + 1, results[i]))
+    except Exception as e:
+        raise Exception("Unable to write predictions to file: {}".format(e))
+
+
 class KaggleProject:
     def __init__(self):
         self.results = []
@@ -130,7 +146,13 @@ class KaggleProject:
         for row_data in in_process_data.values():
             vectorize_time = datetime.datetime.now()
             sys.stdout.write("\rTime elapsed : {}".format(vectorize_time - start_time))
+            # Test data includes the ID, so remove that before finishing the processing
+            if len(row_data) == 15:
+                row_data.pop('ID')
             processed_data.append(vectorizer.fit_transform(row_data).toarray())
+
+        # Reshape so it can be handled by the sklearn methods
+        processed_data = np.reshape(processed_data, (len(processed_data), 14))
 
         # Training data
         if len(in_process_labels) != 0:
@@ -143,12 +165,11 @@ class KaggleProject:
 
         self.load_data()
         adaBoost = AdaBoostClassifier()
+
+        print("\nFitting the data using default AdaBoost")
         adaBoost.fit(self.training_X, self.training_y)
-        print("ID,Prediction")
-        for i in range(1, len(self.testing_X)):
-            row = self.testing_X[i]
-            prediction = adaBoost.predict(row)
-            print("{}, {}".format(i, prediction))
+        predictions = adaBoost.predict(self.testing_X)
+        write_results_to_file(predictions)
 
 
 project = KaggleProject()
