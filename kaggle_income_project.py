@@ -8,6 +8,8 @@ Date Created: 24 October 2023
 Modified : 24 October 2023
 """
 
+import sys
+import datetime
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.feature_extraction import DictVectorizer
 
@@ -15,14 +17,21 @@ from sklearn.feature_extraction import DictVectorizer
 def load_dataset(filename):
     try:
         if filename.endswith('.csv'):
+            # Data we need to return
+            data = {}
+            labels = []
+            label_counts = {}
+            attribute_counts = {}
+            missing_data_indices = []
             with open(filename, 'r') as f:
-                data = []
-                labels = []
                 attributes = []
+                row_id = 0
                 for line in f:
                     entry = line.strip().split(',')
                     if len(attributes) < 1:
                         attributes = entry
+                        for attr in attributes:
+                            attribute_counts[attr] = {}
                     else:
                         row = {}
                         for i in range(len(entry)):
@@ -32,13 +41,35 @@ def load_dataset(filename):
                             except ValueError:
                                 value = entry[i]
 
+                            # Missing values seem to be indicated by ?
+                            if isinstance(value, str) and "?" in value:
+                                missing_data_indices.append((row_id, attributes[i]))
+
+                            # If we have reached the label column, add to that list instead of the row data
                             if "income>50K" in attributes[i]:
                                 labels.append(value)
+                                label_counts[value] = label_counts.get(value, 0) + 1
                             else:
                                 row[attributes[i]] = value
+                                if value in attribute_counts[attributes[i]]:
+                                    attribute_counts[attributes[i]][value] += 1
+                                else:
+                                    attribute_counts[attributes[i]][value] = 1
+                        data[row_id] = row
+                    row_id += 1
 
-                        data.append(row)
-            return data, labels
+            # Identify which label has more identified rows
+            majority_label = 0
+            if len(label_counts) > 0:
+                if label_counts[0] > label_counts[1]:
+                    majority_label = 0
+                else:
+                    majority_label = 1
+            return {"dataset": data,
+                    "labels": labels,
+                    "majority_label": majority_label,
+                    "attribute_counts": attribute_counts,
+                    "missing_data_indices": missing_data_indices}
         else:
             print('Provided file', filename, 'is not a csv.')
     except OSError as e:
@@ -47,35 +78,70 @@ def load_dataset(filename):
     return None
 
 
-def load_data():
-
-    train_X, train_y = load_dataset("dataset/train.csv")
-    test_X = load_dataset("dataset/test.csv")
-
-    return train_X, train_y, test_X
-
-
 class KaggleProject:
     def __init__(self):
         self.results = []
-        self.training_X, self.training_y, self.testing_X = load_data()
+        self.training_X = None
+        self.training_y = None
+        self.testing_X = None
 
-    def __pre_process_data(self):
+    def load_data(self):
+        training_unprocessed_data = load_dataset("dataset/train.csv")
+        print("\nProcessing training data")
+        self.__pre_process_data(training_unprocessed_data)
+        test_unprocessed_data = load_dataset("dataset/test.csv")
+        print("\nProcessing test data")
+        self.__pre_process_data(test_unprocessed_data)
+        return 0
+
+    def __pre_process_data(self, unprocessed_data):
         """
         Handle all missing (?) attribute values and convert the dictionary rows to arrays
         that the sklearn trees can handle.
         :return:
         """
-        vectorizer = DictVectorizer()
-        processed_X = []
-        for i in range(len(self.training_X)):
-            row = self.training_X[i]
-            processed_X.append(vectorizer.fit_transform(row).toarray())
+        start_time = datetime.datetime.now()
 
-        return 0
+        in_process_data = unprocessed_data["dataset"]
+        in_process_labels = unprocessed_data["labels"]
+
+        attribute_majorities = {}
+        # Update all rows with missing values to use the attribute majority
+        for missing in unprocessed_data["missing_data_indices"]:
+            missing_time = datetime.datetime.now()
+            sys.stdout.write("\rTime elapsed : {}".format(missing_time-start_time))
+            row = in_process_data[missing[0]]
+            attribute = missing[1]
+
+            if attribute == "label":
+                in_process_labels[missing(0)] = unprocessed_data["majority_label"]
+            else:
+                if attribute in attribute_majorities:
+                    majority = attribute_majorities[attribute]
+                else:
+                    # Get sorted list of attribute values to identify the majority value
+                    attribute_count = unprocessed_data["attribute_counts"][attribute]
+                    majority = max(attribute_count, key=attribute_count.get)
+                    attribute_majorities[attribute] = majority
+                row[attribute] = majority
+
+        vectorizer = DictVectorizer()
+        processed_data = []
+        for row_data in in_process_data.values():
+            vectorize_time = datetime.datetime.now()
+            sys.stdout.write("\rTime elapsed : {}".format(vectorize_time - start_time))
+            processed_data.append(vectorizer.fit_transform(row_data).toarray())
+
+        # Training data
+        if len(in_process_labels) != 0:
+            self.training_X = processed_data
+            self.training_y = in_process_labels
+        else:
+            self.testing_X = processed_data
 
     def run_midterm_progress(self):
-        self.__pre_process_data()
+
+        self.load_data()
         adaBoost = AdaBoostClassifier()
         adaBoost.fit(self.training_X, self.training_y)
         print("ID,Prediction")
