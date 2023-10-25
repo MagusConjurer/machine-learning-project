@@ -12,6 +12,7 @@ import sys
 import datetime
 import numpy as np
 from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction import DictVectorizer
 
 
@@ -164,11 +165,17 @@ class KaggleProject:
     def run_midterm_progress(self):
 
         self.load_data()
-        adaBoost = AdaBoostClassifier()
 
-        print("\nFitting the data using default AdaBoost")
-        adaBoost.fit(self.training_X, self.training_y)
-        predictions = adaBoost.predict(self.testing_X)
+        # print("\nFitting the data using default AdaBoost")
+        # adaBoost = AdaBoostClassifier()
+        # adaBoost.fit(self.training_X, self.training_y)
+        # predictions = adaBoost.predict(self.testing_X)
+
+        print("\nFitting the data using default Random Forests")
+        randforest = RandomForestClassifier()
+        randforest.fit(self.training_X, self.training_y)
+        predictions = randforest.predict(self.testing_X)
+
         write_results_to_file(predictions)
 
 
