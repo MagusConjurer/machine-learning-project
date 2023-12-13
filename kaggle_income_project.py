@@ -5,7 +5,7 @@
 Description:
 Author: Cameron Davis
 Date Created: 24 October 2023
-Modified : 24 October 2023
+Modified : 13 December 2023
 """
 
 import sys
@@ -14,6 +14,11 @@ import numpy as np
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction import DictVectorizer
+from sklearn.linear_model import Perceptron
+from sklearn import svm
+from sklearn.neural_network import MLPClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.linear_model import LogisticRegression
 
 
 def load_dataset(filename):
@@ -87,7 +92,7 @@ def write_results_to_file(results):
     filename = "predictions/prediction-{}-{}.csv".format(day, time)
     try:
         with open(filename, "w") as f:
-            print("Writing predictions to file:", filename)
+            print("\nWriting predictions to file:", filename)
             f.write("ID,Prediction")
             for i in range(len(results)):
                 f.write("\n{},{}".format(i + 1, results[i]))
@@ -178,6 +183,42 @@ class KaggleProject:
 
         write_results_to_file(predictions)
 
+    def run_final_progress(self):
+        self.load_data()
 
-project = KaggleProject()
-project.run_midterm_progress()
+        # print("\nFitting the data using Perceptron with the default settings")
+        defaultPerceptron = Perceptron()
+        defaultPerceptron.fit(self.training_X, self.training_y)
+        # predictions = defaultPerceptron.predict(self.testing_X)
+
+        # print("\nFitting the data using SVM with the default settings")
+        defaultSVM = svm.SVC()
+        defaultSVM.fit(self.training_X, self.training_y)
+        # predictions = defaultSVM.predict(self.testing_X)
+
+        # print("\nFitting the data using Neural Net with relu")
+        reluNN = MLPClassifier(random_state=1, activation='relu', solver='adam')
+        reluNN.fit(self.training_X, self.training_y)
+        # predictions = reluNN.predict(self.testing_X)
+
+        # print("\nFitting the data using Gaussian Naive Bayes with the default settings")
+        defaultGNB = GaussianNB()
+        defaultGNB.fit(self.training_X, self.training_y)
+        # predictions = defaultGNB.predict(self.testing_X)
+
+        # print("\nFitting the data using Logistic Regression with the default settings")
+        defaultLogReg = LogisticRegression()
+        defaultLogReg.fit(self.training_X, self.training_y)
+        # predictions = defaultLogReg.predict(self.testing_X)
+
+        # write_results_to_file(predictions)
+
+
+def main():
+    project = KaggleProject()
+    # project.run_midterm_progress()
+    project.run_final_progress()
+
+
+if __name__ == "__main__":
+    main()
