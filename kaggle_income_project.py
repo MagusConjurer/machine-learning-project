@@ -11,6 +11,7 @@ Modified : 13 December 2023
 import sys
 import datetime
 import numpy as np
+import sklearn.preprocessing
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction import DictVectorizer
@@ -20,6 +21,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import MinMaxScaler
 
 
 def load_dataset(filename):
@@ -227,12 +229,12 @@ class KaggleProject:
 
         # predictions = tunedGNB.predict(self.testing_X)
 
-        print("\nFitting the data using a tuned Random Forest")
+        # print("\nFitting the data using a tuned Random Forest")
 
-        numTrees = [5, 10, 25, 50, 100]
-        maxTreeDepth = [None, 5, 10, 15, 20, 25, 30]
-        minSamplesToSplit = [2, 4, 6, 8, 10]
-        usingBootstrap = [True, False]
+        # numTrees = [5, 10, 25, 50, 100]
+        # maxTreeDepth = [None, 5, 10, 15, 20, 25, 30]
+        # minSamplesToSplit = [2, 4, 6, 8, 10]
+        # usingBootstrap = [True, False]
 
         # print("Trees | Depth | Samples to Split | Is Bootstrap | Training Accuracy")
         # for trees in numTrees:
@@ -339,8 +341,50 @@ class KaggleProject:
         #     predictions = bootstrappedForest.predict(self.testing_X)
         # else:
         #     predictions = bootstrappedForest.predict(self.testing_X)
+
+        # regularization term no affect with otherwise default settings
+        # lbfgs 0.7994, newton-cg 0.81868, newton-cholesky 0.8186
+        # solverOptions = ['lbfgs', 'liblinear', 'newton-cg', 'newton-cholesky', 'sag', 'saga']
+        # for option in solverOptions:
+        #     tunedLR = LogisticRegression(solver=option, max_iter=500)
+        #     tunedLR.fit(self.training_X, self.training_y)
+        #     lrPredictions = tunedLR.predict(self.training_X)
+        #     lrAccuracy = accuracy_score(self.training_y, lrPredictions)
+        #     print(option, lrAccuracy)
+
+        # tunedLR = LogisticRegression(solver='newton-cg', max_iter=500)
+        # tunedLR.fit(self.training_X, self.training_y)
+        # predictions = tunedLR.predict(self.testing_X)
+
+        # print('\nFitting the data using SVM on normalized training data')
         #
-        # write_results_to_file(predictions)
+        # scaler = MinMaxScaler()
+        # scaled_training_X = scaler.fit_transform(self.training_X)
+        # scaled_testing_X = scaler.transform(self.testing_X)
+
+        # cOptions = [0.001, 0.01, 0.1, 1, 10, 100]
+        # cOptions = [1000, 10000, 100000] --- higher than 100 takes way too long
+
+        # for c in cOptions:
+        #     SVC = svm.SVC(C=c)
+        #
+        #     SVC.fit(scaled_training_X, self.training_y)
+        #     predictions = SVC.predict(scaled_training_X)
+        #     svcAccuracy = accuracy_score(self.training_y, predictions)
+        #     print(c, svcAccuracy)
+
+        # SVC = svm.SVC(C=100)
+        # SVC.fit(scaled_training_X, self.training_y)
+        # predictions = SVC.predict(scaled_testing_X)
+
+        bestForest = RandomForestClassifier(n_estimators=10,
+                                            max_depth=30,
+                                            min_samples_split=6,
+                                            bootstrap=False)
+        bestForest.fit(self.training_X, self.training_y)
+        predictions = bestForest.predict(self.training_X)
+
+        write_results_to_file(predictions)
 
 
 def main():
