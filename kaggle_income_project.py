@@ -19,6 +19,7 @@ from sklearn import svm
 from sklearn.neural_network import MLPClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
 
 
 def load_dataset(filename):
@@ -187,30 +188,158 @@ class KaggleProject:
         self.load_data()
 
         # print("\nFitting the data using Perceptron with the default settings")
-        defaultPerceptron = Perceptron()
-        defaultPerceptron.fit(self.training_X, self.training_y)
+        # defaultPerceptron = Perceptron()
+        # defaultPerceptron.fit(self.training_X, self.training_y)
         # predictions = defaultPerceptron.predict(self.testing_X)
 
         # print("\nFitting the data using SVM with the default settings")
-        defaultSVM = svm.SVC()
-        defaultSVM.fit(self.training_X, self.training_y)
+        # defaultSVM = svm.SVC()
+        # defaultSVM.fit(self.training_X, self.training_y)
         # predictions = defaultSVM.predict(self.testing_X)
 
         # print("\nFitting the data using Neural Net with relu")
-        reluNN = MLPClassifier(random_state=1, activation='relu', solver='adam')
-        reluNN.fit(self.training_X, self.training_y)
+        # reluNN = MLPClassifier(random_state=1, activation='relu', solver='adam')
+        # reluNN.fit(self.training_X, self.training_y)
         # predictions = reluNN.predict(self.testing_X)
 
         # print("\nFitting the data using Gaussian Naive Bayes with the default settings")
-        defaultGNB = GaussianNB()
-        defaultGNB.fit(self.training_X, self.training_y)
+        # defaultGNB = GaussianNB()
+        # defaultGNB.fit(self.training_X, self.training_y)
         # predictions = defaultGNB.predict(self.testing_X)
 
         # print("\nFitting the data using Logistic Regression with the default settings")
-        defaultLogReg = LogisticRegression()
-        defaultLogReg.fit(self.training_X, self.training_y)
+        # defaultLogReg = LogisticRegression()
+        # defaultLogReg.fit(self.training_X, self.training_y)
         # predictions = defaultLogReg.predict(self.testing_X)
 
+        # print("\nFitting the data using Gaussian Naive Bayes with tuned settings")
+        #
+        # smoothing_options = [1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9]
+        # for option in smoothing_options:
+        #     tunedGNB = GaussianNB(var_smoothing=option)
+        #     tunedGNB.fit(self.training_X, self.training_y)
+        #
+        #     training_predictions = tunedGNB.predict(self.training_X)
+        #     trainingAccuracy = accuracy_score(self.training_y, training_predictions)
+        #     print(option, ": ", trainingAccuracy)
+
+        # maxed out at 0.80556 accuracy using 1e-5
+
+        # predictions = tunedGNB.predict(self.testing_X)
+
+        print("\nFitting the data using a tuned Random Forest")
+
+        numTrees = [5, 10, 25, 50, 100]
+        maxTreeDepth = [None, 5, 10, 15, 20, 25, 30]
+        minSamplesToSplit = [2, 4, 6, 8, 10]
+        usingBootstrap = [True, False]
+
+        # print("Trees | Depth | Samples to Split | Is Bootstrap | Training Accuracy")
+        # for trees in numTrees:
+        #     for depth in maxTreeDepth:
+        #         for samples in minSamplesToSplit:
+        #             for isBootstrap in usingBootstrap:
+        #                 tunedRandforest = RandomForestClassifier(n_estimators=trees,
+        #                                                          max_depth=depth,
+        #                                                          min_samples_split=samples,
+        #                                                          bootstrap=isBootstrap)
+        #                 tunedRandforest.fit(self.training_X, self.training_y)
+        #                 trainingPredictions = tunedRandforest.predict(self.training_X)
+        #                 trainingAccuracy = accuracy_score(self.training_y, trainingPredictions)
+        #
+        #                 print(trees, "|", depth, "|", samples, "|", isBootstrap, "|", trainingAccuracy)
+
+        # 10, 30, 2, False -- 0.69673 (overfit)
+        # 10, 25, 6, False -- 0.70371
+        # 5, None, 10, True -- 0.702
+        # finalRandForest = RandomForestClassifier(n_estimators=5,
+        #                                          max_depth=None,
+        #                                          min_samples_split=10,
+        #                                          bootstrap=True)
+
+        # best_num_trees = 0
+        # best_tree_accuracy = 0
+        # for tree in numTrees:
+        #     treeTuning = RandomForestClassifier(n_estimators=tree)
+        #     treeTuning.fit(self.training_X, self.training_y)
+        #     treePredictions = treeTuning.predict(self.training_X)
+        #     treeAccuracy = accuracy_score(self.training_y, treePredictions)
+        #
+        #     if treeAccuracy > best_tree_accuracy:
+        #         best_tree_accuracy = treeAccuracy
+        #         best_num_trees = tree
+        #
+        # print(best_num_trees, best_tree_accuracy)
+        #
+        # best_max_depth = None
+        # best_depth_accuracy = 0
+        # for depth in maxTreeDepth:
+        #     depthTuning = RandomForestClassifier(n_estimators=best_num_trees,
+        #                                          max_depth=depth)
+        #     depthTuning.fit(self.training_X, self.training_y)
+        #     depthPredictions = depthTuning.predict(self.training_X)
+        #     depthAccuracy = accuracy_score(self.training_y, depthPredictions)
+        #
+        #     if depthAccuracy > best_depth_accuracy:
+        #         best_depth_accuracy = depthAccuracy
+        #         best_max_depth = depth
+        #
+        # print(best_max_depth, best_depth_accuracy)
+        #
+        # best_split = None
+        # best_split_accuracy = 0
+        # for split in minSamplesToSplit:
+        #     splitTuning = RandomForestClassifier(n_estimators=best_num_trees,
+        #                                          max_depth=best_max_depth,
+        #                                          min_samples_split=split)
+        #     splitTuning.fit(self.training_X, self.training_y)
+        #     splitPredictions = splitTuning.predict(self.training_X)
+        #     splitAccuracy = accuracy_score(self.training_y, splitPredictions)
+        #
+        #     if splitAccuracy > best_split_accuracy:
+        #         best_split_accuracy = splitAccuracy
+        #         best_split = split
+        #
+        # print(best_split, best_split_accuracy)
+        #
+        # best_split = None
+        # best_split_accuracy = 0
+        # for split in minSamplesToSplit:
+        #     splitTuning = RandomForestClassifier(n_estimators=best_num_trees,
+        #                                          max_depth=best_max_depth,
+        #                                          min_samples_split=split)
+        #     splitTuning.fit(self.training_X, self.training_y)
+        #     splitPredictions = splitTuning.predict(self.training_X)
+        #     splitAccuracy = accuracy_score(self.training_y, splitPredictions)
+        #
+        #     if splitAccuracy > best_split_accuracy:
+        #         best_split_accuracy = splitAccuracy
+        #         best_split = split
+        #
+        # bootstrappedForest = RandomForestClassifier(n_estimators=best_num_trees,
+        #                                             max_depth=best_max_depth,
+        #                                             min_samples_split=best_split,
+        #                                             bootstrap=True)
+        # bootstrappedForest.fit(self.training_X, self.training_y)
+        # bootstrappedPredictions = bootstrappedForest.predict(self.training_X)
+        # boostrappedAccuracy = accuracy_score(self.training_y, bootstrappedPredictions)
+        #
+        # nonBootstrappedForest = RandomForestClassifier(n_estimators=best_num_trees,
+        #                                                max_depth=best_max_depth,
+        #                                                min_samples_split=best_split,
+        #                                                bootstrap=False)
+        # nonBootstrappedForest.fit(self.training_X, self.training_y)
+        # nonBootstrappedPredictions = nonBootstrappedForest.predict(self.training_X)
+        # nonBootstrappedAccuracy = accuracy_score(self.training_y, nonBootstrappedPredictions)
+        #
+        # print("Bootstrapped:", boostrappedAccuracy)
+        # print("Non Bootstrapped:", nonBootstrappedAccuracy)
+        #
+        # if boostrappedAccuracy > nonBootstrappedAccuracy:
+        #     predictions = bootstrappedForest.predict(self.testing_X)
+        # else:
+        #     predictions = bootstrappedForest.predict(self.testing_X)
+        #
         # write_results_to_file(predictions)
 
 
